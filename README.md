@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق اللغة الإنجليزية التفاعلي - المستوى 4</title>
+    <!-- تحميل Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تحميل أيقونات Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* خط إنتر (Inter) يضمن قراءة جيدة */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            text-align: right;
+        }
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 200px;
+        }
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem;
+            cursor: pointer;
+        }
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+        }
+        .card-front {
+            background-color: #3b82f6; /* أزرق */
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .card-back {
+            background-color: #10b981; /* أخضر */
+            color: white;
+            transform: rotateY(180deg);
+            font-size: 1rem;
+        }
+        .drag-word {
+            display: inline-block;
+            cursor: grab;
+            background-color: #fca5a5; /* وردي خفيف */
+            border: 1px solid #ef4444;
+            padding: 0.25rem 0.75rem;
+            margin: 0.25rem;
+            border-radius: 0.375rem;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+        .drag-target {
+            min-width: 80px;
+            min-height: 40px;
+            background-color: #e5e7eb; /* رمادي فاتح */
+            border: 2px dashed #9ca3af;
+            margin: 0.25rem;
+            padding: 0.5rem;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.375rem;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div id="app" class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-2xl">
+        <header class="text-center mb-8 pb-4 border-b-4 border-blue-500">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">
+                تطبيق اللغة الإنجليزية التفاعلي
+            </h1>
+            <p class="text-xl text-blue-600 mt-2">المستوى 4: من المنهج المرفق</p>
+        </header>
+
+        <!-- قائمة الفصول -->
+        <div id="class-menu" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+            <!-- سيتم إنشاء أزرار الفصول هنا بواسطة JavaScript -->
+        </div>
+
+        <!-- محتوى الفصل المحدد -->
+        <div id="class-content" class="hidden">
+            <button onclick="showMenu()" class="text-blue-600 hover:text-blue-800 font-semibold mb-6 flex items-center p-2 rounded-lg transition duration-300">
+                <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                العودة إلى قائمة الفصول
+            </button>
+            <h2 id="class-title" class="text-2xl sm:text-3xl font-bold text-gray-700 mb-6 border-b pb-2"></h2>
+
+            <!-- حاويات الأقسام -->
+            <div id="vocabulary-section" class="bg-blue-50 p-4 rounded-lg shadow-md mb-6">
+                <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center">
+                    <i data-lucide="book-open" class="w-6 h-6 ml-2"></i>
+                    1. المفردات (Vocabulary) - بطاقات الحفظ
+                </h3>
+                <div id="flashcard-ui">
+                    <div class="card-container mb-4">
+                        <div id="current-flashcard" class="flashcard" onclick="flipCard()">
+                            <div class="card-face card-front" id="card-front">انقر للبدء</div>
+                            <div class="card-face card-back" id="card-back"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between space-x-2">
+                        <button onclick="nextCard()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex-1 transition duration-300">البطاقة التالية <i data-lucide="skip-forward" class="w-4 h-4 inline mr-1"></i></button>
+                        <button onclick="listenCard()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"><i data-lucide="volume-2" class="w-4 h-4 inline"></i> استمع</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="expressions-section" class="bg-purple-50 p-4 rounded-lg shadow-md mb-6">
+                <h3 class="text-xl font-semibold text-purple-700 mb-4 flex items-center">
+                    <i data-lucide="message-square" class="w-6 h-6 ml-2"></i>
+                    2. التعبيرات (Expressions) - تدريب النطق
+                </h3>
+                <p class="text-gray-600 mb-4">اضغط على العبارة للاستماع إليها، ثم اضغط على زر التسجيل لتدرب على النطق الصحيح.</p>
+                <div id="expressions-list" class="space-y-2">
+                    <!-- سيتم إدراج العبارات هنا -->
+                </div>
+                <div class="mt-4 p-3 bg-white rounded-lg border">
+                    <button id="start-recognition" onclick="toggleRecognition()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 w-full flex items-center justify-center">
+                        <i data-lucide="mic" class="w-5 h-5 ml-2"></i>
+                        ابدأ التسجيل للتدريب
+                    </button>
+                    <p id="recognition-status" class="mt-2 text-sm text-center text-gray-500">حالة التسجيل: متوقف</p>
+                    <p id="recognition-result" class="mt-2 text-lg font-bold text-center text-green-700"></p>
+                </div>
+            </div>
+
+            <div id="grammar-section" class="bg-teal-50 p-4 rounded-lg shadow-md mb-6">
+                <h3 class="text-xl font-semibold text-teal-700 mb-4 flex items-center">
+                    <i data-lucide="pencil-ruler" class="w-6 h-6 ml-2"></i>
+                    3. القواعد (Grammar) - بناء الجمل
+                </h3>
+                <p class="text-gray-600 mb-4">قم بسحب وإفلات الكلمات لبناء الجملة الصحيحة.</p>
+                <div id="grammar-prompt" class="font-bold text-gray-800 mb-3"></div>
+                <div id="sentence-container" class="flex flex-wrap p-3 border-2 border-dashed border-teal-300 rounded-lg min-h-[50px] bg-white mb-4">
+                    <!-- منطقة الإفلات -->
+                </div>
+                <div id="words-container" class="flex flex-wrap p-3 bg-gray-100 rounded-lg mb-4">
+                    <!-- الكلمات المبعثرة -->
+                </div>
+                <div class="flex justify-between">
+                    <button onclick="checkSentence()" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">تحقق</button>
+                    <button onclick="resetSentence()" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300">إعادة تعيين</button>
+                    <button onclick="nextGrammarChallenge()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">التالي <i data-lucide="chevrons-left" class="w-4 h-4 inline mr-1"></i></button>
+                </div>
+                <p id="grammar-feedback" class="mt-3 text-lg font-bold text-center"></p>
+            </div>
+            
+        </div>
+
+    </div>
+
+    <script>
+        // دالة مساعدة لتهيئة أيقونات Lucide
+        const renderIcons = () => {
+            lucide.createIcons();
+        };
+
+        // ====== بيانات المنهج (مستخلصة ومُنظمة من الملف المرفق) ======
+        const curriculumData = [
+            {
+                id: 1,
+                title: "Class 1: Appearance (المظهر)",
+                icon: "user",
+                vocabulary: [
+                    { en: "Slim", ar: "نحيل" }, { en: "Bald", ar: "أصلع" }, { en: "Average", ar: "متوسط" },
+                    { en: "Handsome", ar: "وسيم" }, { en: "Charismatic", ar: "جذاب / كاريزمي" },
+                    { en: "Muscular", ar: "مفتول العضلات" }, { en: "Hazel", ar: "بندقي (لون العيون)" }
+                ],
+                expressions: [
+                    { en: "As cold as ice", ar: "بارد كالثلج (قاس/غير عاطفي)" },
+                    { en: "All skin and bone", ar: "مجرد جلد وعظام (نحيل جداً)" },
+                    { en: "Beauty is only skin deep", ar: "الجمال ليس سوى مظهر (الشخصية أهم)" }
+                ],
+                grammar: {
+                    rule: "Present Continuous: Who are you hanging out with a lot these days?",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: هو طويل القامة ومفتول العضلات.", answer: "He is tall and well built", words: ["tall", "He", "and", "is", "built", "well"] },
+                        { prompt: "قم ببناء جملة: ماذا تدرس هذه الأيام؟", answer: "What are you studying these days", words: ["studying", "What", "are", "you", "days", "these"] }
+                    ]
+                }
+            },
+            {
+                id: 2,
+                title: "Class 2: Hobbies (الهوايات)",
+                icon: "gamepad",
+                vocabulary: [
+                    { en: "Coin collecting", ar: "جمع العملات" }, { en: "Sewing", ar: "الخياطة" }, { en: "Astronomy", ar: "علم الفلك" },
+                    { en: "Knitting", ar: "الحياكة" }, { en: "Pottery", ar: "صناعة الفخار" }, { en: "Origami", ar: "فن طي الورق" }
+                ],
+                expressions: [
+                    { en: "Take up", ar: "يبدأ هواية جديدة" },
+                    { en: "Give up", ar: "يستسلم/يتخلى عن شيء" },
+                    { en: "I am interested in", ar: "أنا مهتم بـ" }
+                ],
+                grammar: {
+                    rule: "Present Continuous for Future Actions: I'm buying shoes tomorrow.",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: أنا أشتري أحذية الغد.", answer: "I am buying shoes tomorrow", words: ["buying", "shoes", "I", "am", "tomorrow"] },
+                        { prompt: "قم ببناء جملة: هل ستقوم بشيء مميز في عطلة نهاية الأسبوع؟", answer: "Are you doing anything special for the weekend", words: ["Are", "doing", "special", "anything", "for", "the", "weekend", "you"] }
+                    ]
+                }
+            },
+            {
+                id: 3,
+                title: "Class 3: Occupations (المهن)",
+                icon: "briefcase",
+                vocabulary: [
+                    { en: "Architect", ar: "مهندس معماري" }, { en: "Pharmacist", ar: "صيدلي" }, { en: "Accountant", ar: "محاسب" },
+                    { en: "Broker", ar: "سمسار" }, { en: "Web designer", ar: "مصمم مواقع" }, { en: "Financial analyst", ar: "محلل مالي" }
+                ],
+                expressions: [
+                    { en: "What do you do?", ar: "ماذا تعمل؟" },
+                    { en: "Bread winner", ar: "المعيل الرئيسي للعائلة" },
+                    { en: "Dream job", ar: "وظيفة الأحلام" }
+                ],
+                grammar: {
+                    rule: "How many (countable) / How much (uncountable): How much water?",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: كمية الماء التي تشربها كل يوم.", answer: "How much water do you drink every day", words: ["do", "drink", "How", "water", "you", "every", "much", "day"] },
+                        { prompt: "قم ببناء جملة: كم عدد الوجبات التي تتناولها.", answer: "How many meals do you have every day", words: ["do", "have", "How", "meals", "many", "you", "every", "day"] }
+                    ]
+                }
+            },
+            {
+                id: 4,
+                title: "Class 4: Phones (الهواتف)",
+                icon: "smartphone",
+                vocabulary: [
+                    { en: "Smart phone", ar: "هاتف ذكي" }, { en: "Caller ID", ar: "كاشف الرقم" }, { en: "Area code", ar: "رمز المنطقة" },
+                    { en: "Hang up", ar: "يغلق الخط" }, { en: "Missed call", ar: "مكالمة فائتة" }, { en: "Directory", ar: "دليل الهاتف" }
+                ],
+                expressions: [
+                    { en: "Hold the phone", ar: "انتظر لحظة" },
+                    { en: "Can I leave a message?", ar: "هل يمكنني ترك رسالة؟" },
+                    { en: "Answer the phone", ar: "يرد على الهاتف" }
+                ],
+                grammar: {
+                    rule: "Present Simple vs. Present Continuous: Actions as a habit vs. actions now.",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: ما هي بعض الأشياء التي تفعلها كل يوم؟", answer: "What are some things you do every day", words: ["some", "What", "things", "you", "are", "do", "every", "day"] },
+                        { prompt: "قم ببناء جملة: هل لديك ما يكفي من وقت الفراغ؟", answer: "Do you have enough free time", words: ["Do", "have", "free", "you", "enough", "time"] }
+                    ]
+                }
+            },
+            {
+                id: 5,
+                title: "Class 5: Restaurants (المطاعم)",
+                icon: "utensils",
+                vocabulary: [
+                    { en: "Beverage", ar: "مشروب" }, { en: "Appetizers", ar: "مقبلات" }, { en: "Desserts", ar: "حلويات" },
+                    { en: "Waiter/waitress", ar: "نادل/نادلة" }, { en: "Tips", ar: "بقشيش" }, { en: "Check", ar: "الفاتورة" }
+                ],
+                expressions: [
+                    { en: "Let's go have a bite!", ar: "لنذهب لتناول وجبة خفيفة!" },
+                    { en: "Can I get a menu please?", ar: "هل يمكنني الحصول على قائمة الطعام من فضلك؟" },
+                    { en: "No thanks, I'm full!", ar: "لا شكراً، أنا شبعت!" }
+                ],
+                grammar: {
+                    rule: "Verb to Be vs. Verb to Have: Use 'be' with adjective, 'have' with adjective + noun.",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: هو لديه شعر قصير وبني.", answer: "He has short brown hair", words: ["He", "short", "has", "brown", "hair"] },
+                        { prompt: "قم ببناء جملة: صديقتي ليا نحيفة جداً.", answer: "My friend Lia is really slim", words: ["My", "is", "really", "friend", "Lia", "slim"] }
+                    ]
+                }
+            },
+            {
+                id: 6,
+                title: "Class 6: Sports (الرياضة)",
+                icon: "football",
+                vocabulary: [
+                    { en: "Coach", ar: "مدرب" }, { en: "Spectators", ar: "المتفرجون" }, { en: "Championship", ar: "بطولة" },
+                    { en: "Rugby", ar: "الرجبي" }, { en: "Aerobics", ar: "التمارين الرياضية الهوائية" }, { en: "Track", ar: "مضمار الجري" }
+                ],
+                expressions: [
+                    { en: "Ball is in your court", ar: "الكرة في ملعبك (قرارك)" },
+                    { en: "Get the ball rolling", ar: "ابدأ العمل/التحرك" },
+                    { en: "Keep your eye on the ball", ar: "ركز جيداً" }
+                ],
+                grammar: {
+                    rule: "Should/Shouldn't + base form for advice: You should practice more.",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: يجب أن تتوقف عن التدخين.", answer: "You should quit smoking", words: ["quit", "You", "should", "smoking"] },
+                        { prompt: "قم ببناء جملة: يجب أن يمارسوا الرياضات المائية.", answer: "They should practice water sports", words: ["They", "should", "practice", "water", "sports"] }
+                    ]
+                }
+            },
+            {
+                id: 7,
+                title: "Class 7: Home (المنزل)",
+                icon: "home",
+                vocabulary: [
+                    { en: "Doorknob", ar: "مقبض الباب" }, { en: "Basement", ar: "قبو" }, { en: "Curtains", ar: "ستائر" },
+                    { en: "Couch", ar: "أريكة" }, { en: "Knocker", ar: "مطرقة الباب" }, { en: "View", ar: "منظر" }
+                ],
+                expressions: [
+                    { en: "There is no place like home", ar: "لا يوجد مكان مثل المنزل" },
+                    { en: "Home sweet home", ar: "يا له من منزل جميل" },
+                    { en: "Home sick", ar: "الشوق إلى الوطن" }
+                ],
+                grammar: {
+                    rule: "Can/Can't + base verb for ability: Can you drive well?",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: هل يمكنك القيادة جيداً؟", answer: "Can you drive well", words: ["Can", "you", "drive", "well"] },
+                        { prompt: "قم ببناء جملة: لا يمكنني الطبخ جيداً.", answer: "I can't cook well", words: ["cook", "I", "can't", "well"] }
+                    ]
+                }
+            },
+            {
+                id: 8,
+                title: "Class 8: TV (التلفزيون)",
+                icon: "monitor",
+                vocabulary: [
+                    { en: "Couch potato", ar: "شخص كسول يقضي وقته أمام التلفزيون" }, { en: "Remote Controller", ar: "جهاز التحكم عن بعد" }, { en: "Sitcom", ar: "مسلسل كوميدي" },
+                    { en: "Documentary", ar: "فيلم وثائقي" }, { en: "Infomercial", ar: "إعلان مطول" }, { en: "Glued to the TV", ar: "ملتصق بالتلفزيون" }
+                ],
+                expressions: [
+                    { en: "Turn down the volume", ar: "اخفض الصوت" },
+                    { en: "Change the channel", ar: "غيّر القناة" },
+                    { en: "Put it on the game", ar: "ضعها على المباراة" }
+                ],
+                grammar: {
+                    rule: "Could you for polite requests: Could you please turn down the volume?",
+                    challenges: [
+                        { prompt: "قم ببناء جملة: هل يمكنك أن تخفض الصوت من فضلك؟", answer: "Could you please turn down the volume", words: ["Could", "you", "down", "please", "the", "turn", "volume"] },
+                        { prompt: "قم ببناء جملة: كيف تطلب خدمة من صديقك؟", answer: "How can you ask your friend for a favor", words: ["ask", "friend", "How", "your", "can", "you", "a", "for", "favor"] }
+                    ]
+                }
+            }
+        ];
+
+        let currentClass = null;
+        let currentCardIndex = 0;
+        let grammarChallengeIndex = 0;
+        let recognition = null;
+        let isRecognizing = false;
+        
+        // ====== وظائف القائمة الرئيسية ======
+
+        /**
+         * إنشاء وعرض قائمة الفصول الرئيسية.
+         */
+        function createMenu() {
+            const menu = document.getElementById('class-menu');
+            menu.innerHTML = '';
+            curriculumData.forEach(cls => {
+                const button = document.createElement('button');
+                button.className = "bg-blue-500 hover:bg-blue-600 text-white font-bold p-4 rounded-lg text-center transition duration-300 shadow-lg flex flex-col items-center justify-center space-y-2";
+                button.onclick = () => loadClass(cls.id);
+                button.innerHTML = `
+                    <i data-lucide="${cls.icon}" class="w-8 h-8"></i>
+                    <span class="text-xl">${cls.title.split(': ')[0]}</span>
+                    <span class="text-sm">${cls.title.split(': ')[1]}</span>
+                `;
+                menu.appendChild(button);
+            });
+            renderIcons();
+        }
+
+        /**
+         * تحميل وعرض محتوى فصل دراسي محدد.
+         * @param {number} id - معرّف الفصل.
+         */
+        function loadClass(id) {
+            currentClass = curriculumData.find(cls => cls.id === id);
+            document.getElementById('class-menu').classList.add('hidden');
+            document.getElementById('class-content').classList.remove('hidden');
+            document.getElementById('class-title').textContent = currentClass.title;
+
+            // تهيئة البطاقات والمفردات
+            currentCardIndex = 0;
+            initializeFlashcards(currentClass.vocabulary);
+
+            // تهيئة التعبيرات والنطق
+            initializeExpressions(currentClass.expressions);
+
+            // تهيئة تحدي القواعد
+            grammarChallengeIndex = 0;
+            loadGrammarChallenge(currentClass.grammar.challenges[0]);
+
+            renderIcons();
+        }
+
+        /**
+         * العودة إلى القائمة الرئيسية.
+         */
+        function showMenu() {
+            document.getElementById('class-menu').classList.remove('hidden');
+            document.getElementById('class-content').classList.add('hidden');
+            // إيقاف التعرف على الكلام عند العودة للقائمة
+            if (recognition && isRecognizing) {
+                recognition.stop();
+                isRecognizing = false;
+                document.getElementById('start-recognition').textContent = 'ابدأ التسجيل للتدريب';
+                document.getElementById('start-recognition').classList.replace('bg-yellow-500', 'bg-red-500');
+            }
+        }
+
+        // ====== وظائف المفردات والبطاقات (Flashcards) ======
+
+        /**
+         * تحديث محتوى البطاقة الحالية.
+         */
+        function updateCardContent() {
+            if (!currentClass || currentClass.vocabulary.length === 0) return;
+            const vocab = currentClass.vocabulary[currentCardIndex];
+            document.getElementById('card-front').textContent = vocab.en;
+            document.getElementById('card-back').textContent = vocab.ar;
+            document.getElementById('current-flashcard').classList.remove('flipped');
+        }
+
+        /**
+         * تهيئة البطاقات التعليمية.
+         * @param {Array<Object>} vocabulary - قائمة المفردات.
+         */
+        function initializeFlashcards(vocabulary) {
+            if (vocabulary.length > 0) {
+                updateCardContent();
+            } else {
+                document.getElementById('card-front').textContent = "لا توجد مفردات لهذا الفصل.";
+                document.getElementById('card-back').textContent = "لا توجد مفردات لهذا الفصل.";
+            }
+        }
+
+        /**
+         * قلب البطاقة.
+         */
+        function flipCard() {
+            document.getElementById('current-flashcard').classList.toggle('flipped');
+        }
+
+        /**
+         * الانتقال إلى البطاقة التالية.
+         */
+        function nextCard() {
+            if (!currentClass) return;
+            currentCardIndex = (currentCardIndex + 1) % currentClass.vocabulary.length;
+            updateCardContent();
+        }
+
+        // ====== وظائف النطق (Text-to-Speech) ======
+
+        /**
+         * تشغيل النطق للنص المحدد باستخدام Web Speech API.
+         * @param {string} text - النص المراد نطقه.
+         */
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                // تحديد اللغة الإنجليزية لضمان النطق الصحيح
+                utterance.lang = 'en-US'; 
+                utterance.rate = 0.9; // سرعة نطق متوسطة
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("للأسف، متصفحك لا يدعم ميزة النطق (Text-to-Speech).");
+            }
+        }
+
+        /**
+         * تشغيل نطق البطاقة الحالية.
+         */
+        function listenCard() {
+            if (!currentClass) return;
+            const text = currentClass.vocabulary[currentCardIndex].en;
+            speakText(text);
+        }
+
+        // ====== وظائف التعبيرات وتدريب النطق (Speech Recognition) ======
+
+        /**
+         * تهيئة قائمة التعبيرات لتشغيل النطق.
+         * @param {Array<Object>} expressions - قائمة التعبيرات.
+         */
+        function initializeExpressions(expressions) {
+            const listContainer = document.getElementById('expressions-list');
+            listContainer.innerHTML = '';
+            expressions.forEach(exp => {
+                const item = document.createElement('div');
+                item.className = "p-3 bg-white border border-purple-300 rounded-lg shadow-sm flex justify-between items-center cursor-pointer hover:bg-purple-100 transition duration-300";
+                item.onclick = () => speakText(exp.en);
+                item.innerHTML = `
+                    <span class="font-semibold text-lg text-purple-800">${exp.en}</span>
+                    <span class="text-sm text-gray-500 ml-4">${exp.ar}</span>
+                    <i data-lucide="volume-2" class="w-5 h-5 text-purple-600"></i>
+                `;
+                listContainer.appendChild(item);
+            });
+            renderIcons();
+        }
+
+        /**
+         * تبديل حالة التعرف على الكلام (التسجيل / الإيقاف).
+         */
+        function toggleRecognition() {
+            const statusEl = document.getElementById('recognition-status');
+            const buttonEl = document.getElementById('start-recognition');
+            const resultEl = document.getElementById('recognition-result');
+
+            if (!('webkitSpeechRecognition' in window)) {
+                statusEl.textContent = "للأسف، متصفحك لا يدعم ميزة التعرف على الكلام (Speech Recognition).";
+                return;
+            }
+
+            if (!recognition) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                // تحديد اللغة الإنجليزية للاستماع
+                recognition.lang = 'en-US'; 
+
+                recognition.onstart = () => {
+                    isRecognizing = true;
+                    statusEl.textContent = 'حالة التسجيل: جاري الاستماع... قل العبارة.';
+                    buttonEl.classList.replace('bg-red-500', 'bg-yellow-500');
+                    buttonEl.innerHTML = '<i data-lucide="mic-off" class="w-5 h-5 ml-2"></i> إيقاف التسجيل';
+                    resultEl.textContent = '';
+                    renderIcons();
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    resultEl.textContent = `ما قلته: "${transcript}"`;
+                    // يمكنك هنا إضافة منطق مقارنة النطق للتحقق من صحته.
+                };
+
+                recognition.onerror = (event) => {
+                    console.error(event);
+                    statusEl.textContent = `خطأ في التسجيل: ${event.error}`;
+                    isRecognizing = false;
+                    buttonEl.classList.replace('bg-yellow-500', 'bg-red-500');
+                    buttonEl.innerHTML = '<i data-lucide="mic" class="w-5 h-5 ml-2"></i> ابدأ التسجيل للتدريب';
+                    renderIcons();
+                };
+
+                recognition.onend = () => {
+                    if (isRecognizing) { // توقف طبيعي بعد إكمال الجملة
+                        isRecognizing = false;
+                        statusEl.textContent = 'حالة التسجيل: انتهى. انقر للبدء مرة أخرى.';
+                        buttonEl.classList.replace('bg-yellow-500', 'bg-red-500');
+                        buttonEl.innerHTML = '<i data-lucide="mic" class="w-5 h-5 ml-2"></i> ابدأ التسجيل للتدريب';
+                        renderIcons();
+                    }
+                };
+            }
+
+            if (isRecognizing) {
+                recognition.stop();
+                isRecognizing = false;
+                statusEl.textContent = 'حالة التسجيل: متوقف. انقر للبدء.';
+                buttonEl.classList.replace('bg-yellow-500', 'bg-red-500');
+                buttonEl.innerHTML = '<i data-lucide="mic" class="w-5 h-5 ml-2"></i> ابدأ التسجيل للتدريب';
+                renderIcons();
+            } else {
+                recognition.start();
+            }
+        }
+
+        // ====== وظائف القواعد (بناء الجمل) ======
+
+        let currentChallenge = null;
+
+        /**
+         * تحميل تحدي القواعد المحدد وعرضه.
+         * @param {Object} challenge - تحدي القواعد.
+         */
+        function loadGrammarChallenge(challenge) {
+            currentChallenge = challenge;
+            document.getElementById('grammar-prompt').textContent = currentChallenge.prompt;
+            document.getElementById('sentence-container').innerHTML = 'قم بإسقاط الكلمات هنا...';
+            document.getElementById('grammar-feedback').textContent = '';
+            
+            const wordsContainer = document.getElementById('words-container');
+            wordsContainer.innerHTML = '';
+
+            // عشوائية الكلمات قبل عرضها
+            const shuffledWords = [...currentChallenge.words].sort(() => Math.random() - 0.5);
+
+            shuffledWords.forEach(word => {
+                const wordEl = document.createElement('span');
+                wordEl.className = "drag-word";
+                wordEl.textContent = word;
+                wordEl.draggable = true;
+                wordEl.ondragstart = (e) => e.dataTransfer.setData('text/plain', word);
+                wordsContainer.appendChild(wordEl);
+            });
+
+            setupDragAndDrop();
+        }
+
+        /**
+         * إعداد وظائف السحب والإفلات.
+         */
+        function setupDragAndDrop() {
+            const sentenceContainer = document.getElementById('sentence-container');
+            const wordsContainer = document.getElementById('words-container');
+
+            sentenceContainer.ondragover = (e) => e.preventDefault();
+            sentenceContainer.ondrop = (e) => {
+                e.preventDefault();
+                if (sentenceContainer.textContent.includes('قم بإسقاط الكلمات هنا...')) {
+                    sentenceContainer.innerHTML = '';
+                }
+                const data = e.dataTransfer.getData('text/plain');
+                const draggedElement = [...wordsContainer.children].find(el => el.textContent === data);
+                if (draggedElement) {
+                    sentenceContainer.appendChild(draggedElement);
+                    draggedElement.style.transform = 'none'; // لإلغاء أي تحويلات سابقة
+                    draggedElement.draggable = false;
+                    draggedElement.className = 'drag-word bg-white border border-teal-500 text-teal-700 mx-1 my-1 cursor-default';
+                }
+            };
+            
+            wordsContainer.ondragover = (e) => e.preventDefault();
+            wordsContainer.ondrop = (e) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text/plain');
+                // لإرجاع الكلمة إلى حاوية الكلمات الأصلية
+                const draggedElement = [...document.getElementById('sentence-container').children].find(el => el.textContent === data);
+                if (draggedElement) {
+                    wordsContainer.appendChild(draggedElement);
+                    draggedElement.draggable = true;
+                    draggedElement.className = 'drag-word';
+                }
+            };
+        }
+
+        /**
+         * التحقق من صحة الجملة التي بناها المستخدم.
+         */
+        function checkSentence() {
+            if (!currentChallenge) return;
+            const sentenceContainer = document.getElementById('sentence-container');
+            const feedbackEl = document.getElementById('grammar-feedback');
+            
+            const constructedSentence = Array.from(sentenceContainer.children)
+                .map(el => el.textContent.trim())
+                .join(' ');
+
+            const correctSentence = currentChallenge.answer.replace(/\s+/g, ' ').trim();
+            const userSentence = constructedSentence.replace(/\s+/g, ' ').trim();
+
+            if (userSentence.toLowerCase() === correctSentence.toLowerCase()) {
+                feedbackEl.className = 'mt-3 text-lg font-bold text-center text-green-600 p-2 bg-green-100 rounded-lg';
+                feedbackEl.textContent = 'صحيح! عمل ممتاز!';
+            } else {
+                feedbackEl.className = 'mt-3 text-lg font-bold text-center text-red-600 p-2 bg-red-100 rounded-lg';
+                feedbackEl.innerHTML = `خطأ. حاول مجدداً. <br> الجملة الصحيحة: <strong>${currentChallenge.answer}</strong>`;
+            }
+        }
+
+        /**
+         * إعادة تعيين الجملة إلى حالتها الأصلية.
+         */
+        function resetSentence() {
+            if (currentChallenge) {
+                loadGrammarChallenge(currentChallenge);
+            }
+        }
+
+        /**
+         * الانتقال إلى تحدي القواعد التالي.
+         */
+        function nextGrammarChallenge() {
+            if (!currentClass) return;
+            grammarChallengeIndex = (grammarChallengeIndex + 1) % currentClass.grammar.challenges.length;
+            loadGrammarChallenge(currentClass.grammar.challenges[grammarChallengeIndex]);
+        }
+
+
+        // ====== تهيئة التطبيق عند التحميل ======
+        window.onload = () => {
+            createMenu();
+        };
+
+    </script>
+</body>
+</html>
